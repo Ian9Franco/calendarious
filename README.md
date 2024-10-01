@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Subscription Calendar
 
-## Getting Started
+## English
 
-First, run the development server:
+Subscription Calendar is a web application that helps users manage and visualize their recurring subscriptions. It provides an intuitive calendar view and a wheel view to display subscription information, making it easy for users to track their monthly expenses and upcoming payments.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Features
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Calendar view: Displays subscriptions on their respective due dates
+- Wheel view: Shows a visual representation of subscription costs
+- Add and remove subscriptions
+- View detailed information about each subscription
+- Calculate total monthly spend
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Technologies Used
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- React
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Framer Motion
 
-## Learn More
+### Getting Started
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Run the development server: `npm run dev`
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Español
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Subscription Calendar es una aplicación web que ayuda a los usuarios a gestionar y visualizar sus suscripciones recurrentes. Proporciona una vista de calendario intuitiva y una vista de rueda para mostrar información de suscripciones, facilitando a los usuarios el seguimiento de sus gastos mensuales y pagos próximos.
 
-## Deploy on Vercel
+### Características
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Vista de calendario: Muestra las suscripciones en sus respectivas fechas de vencimiento
+- Vista de rueda: Muestra una representación visual de los costos de suscripción
+- Agregar y eliminar suscripciones
+- Ver información detallada sobre cada suscripción
+- Calcular el gasto mensual total
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Tecnologías Utilizadas
+
+- React
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+
+### Comenzando
+
+1. Clonar el repositorio
+2. Instalar dependencias: `npm install`
+3. Ejecutar el servidor de desarrollo: `npm run dev`
+4. Abrir [http://localhost:3000](http://localhost:3000) en tu navegador
