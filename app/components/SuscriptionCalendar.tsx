@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import CalendarView from './CalendarView'
 import WheelView from './WheelView'
@@ -8,13 +8,20 @@ import SubscriptionSelector from './SubscriptionSelector'
 import { Subscription, ibmPlexMonoThin, ibmPlexMonoBold, ibmPlexMonoThinItalic } from './Types'
 
 export default function SubscriptionCalendar() {
+  // Estado para controlar la vista (rueda o calendario)
   const [isWheelView, setIsWheelView] = useState(false)
+  // Estado para almacenar las suscripciones
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
+  // Estado para almacenar la fecha actual
   const [currentDate, setCurrentDate] = useState(new Date())
+  // Estado para almacenar la fecha seleccionada
   const [selectedDate, setSelectedDate] = useState<number | null>(null)
+  // Estado para almacenar la suscripción sobre la que se pasa el ratón
   const [hoveredSubscription, setHoveredSubscription] = useState<Subscription | null>(null)
+  // Estado para controlar si el selector de suscripciones está abierto
   const [isSubscriptionSelectorOpen, setIsSubscriptionSelectorOpen] = useState(false)
 
+  // Efecto para obtener la fecha actual
   useEffect(() => {
     const fetchCurrentDate = async () => {
       const apiDate = new Date()
@@ -23,6 +30,7 @@ export default function SubscriptionCalendar() {
     fetchCurrentDate()
   }, [])
 
+  // Efecto para actualizar las fechas de pago de las suscripciones
   useEffect(() => {
     const updatedSubscriptions = subscriptions.map(sub => {
       const nextPaymentDate = new Date(sub.startDate)
@@ -35,36 +43,45 @@ export default function SubscriptionCalendar() {
     setSubscriptions(updatedSubscriptions)
   }, [currentDate, subscriptions])
 
+  // Cálculo del gasto mensual total
   const monthlySpend = subscriptions.reduce((total, sub) => total + sub.amount, 0)
 
+  // Función para cambiar entre la vista de rueda y calendario
   const toggleView = () => setIsWheelView(!isWheelView)
 
-  const addSubscription = (subscription: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>, date: number) => {
-    const startDate = new Date(currentDate)
-    startDate.setDate(date)
+  // Función para añadir una nueva suscripción
+  const addSubscription = useCallback((subscription: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>, date: number) => {
+    // Crear una nueva fecha con el año y mes actuales, y el día seleccionado
+    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), date)
     const newSub: Subscription = {
       ...subscription,
-      date,
-      frequency: `Every ${date}${date === 1 ? 'st' : date === 2 ? 'nd' : date === 3 ? 'rd' : 'th'}`,
+      date, // Usar el día seleccionado directamente
+      frequency: 'Every 30 days',
       totalSpent: 0,
-      startDate: startDate.toISOString().split('T')[0],
+      startDate: startDate.toISOString(),
     }
-    setSubscriptions([...subscriptions, newSub])
-  }
+    setSubscriptions(prevSubscriptions => [...prevSubscriptions, newSub])
+    setIsSubscriptionSelectorOpen(false)
+    setSelectedDate(null)
+  }, [currentDate])
 
-  const deleteSubscription = (subscriptionToDelete: Subscription) => {
-    setSubscriptions(subscriptions.filter(sub => sub !== subscriptionToDelete))
-  }
+  // Función para eliminar una suscripción
+  const deleteSubscription = useCallback((subscriptionToDelete: Subscription) => {
+    setSubscriptions(prevSubscriptions => prevSubscriptions.filter(sub => sub !== subscriptionToDelete))
+  }, [])
 
+  // Función para obtener el acrónimo del mes actual
   const getMonthAcronym = (date: Date) => {
     return date.toLocaleString('default', { month: 'short' }).toUpperCase()
   }
 
+  // Función para manejar el clic en una fecha
   const handleDateClick = (date: number | null) => {
     setSelectedDate(date)
     setIsSubscriptionSelectorOpen(!!date)
   }
 
+  // Función para cerrar el selector de suscripciones
   const closeSubscriptionSelector = () => {
     setIsSubscriptionSelectorOpen(false)
     setSelectedDate(null)
@@ -82,7 +99,7 @@ export default function SubscriptionCalendar() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          <p className={`text-sm text-gray-400 ${ibmPlexMonoThinItalic.className}`}>Monthly spend</p>
+          <p className={`text-sm text-gray-400 ${ibmPlexMonoThinItalic.className}`}>Gasto mensual</p>
           <p className={`text-2xl font-bold ${ibmPlexMonoBold.className}`}>${monthlySpend.toFixed(2)}</p>
         </motion.div>
       </div>

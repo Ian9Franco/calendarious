@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { IconContext } from 'react-icons'
-import { Subscription, ibmPlexMonoBold, ibmPlexMonoBoldItalic, ibmPlexMonoRegular, ibmPlexMonoThin } from './Types'
+import { Subscription, ibmPlexMonoBold, ibmPlexMonoBoldItalic } from './Types'
 
 type CalendarViewProps = {
   currentDate: Date
@@ -23,15 +23,15 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   const renderSubscriptionIcons = (daySubscriptions: Subscription[]) => {
     return (
-      <div className="flex flex-wrap justify-center items-center gap-1">
-        {daySubscriptions.map((sub, index) => (
+      <div className="flex flex-wrap justify-center items-center gap-1 mt-1">
+        {daySubscriptions.slice(0, 4).map((sub, index) => (
           <motion.div
             key={index}
             className="rounded-full flex items-center justify-center"
             style={{ 
               backgroundColor: sub.color,
-              width: '24px',
-              height: '24px'
+              width: '16px',
+              height: '16px'
             }}
             onMouseEnter={() => setHoveredSubscription(sub)}
             onMouseLeave={() => setHoveredSubscription(null)}
@@ -39,11 +39,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             whileTap={{ scale: 0.9 }}
             layout
           >
-            <IconContext.Provider value={{ size: '80%', color: 'white' }}>
+            <IconContext.Provider value={{ size: '10px', color: 'white' }}>
               <sub.icon />
             </IconContext.Provider>
           </motion.div>
         ))}
+        {daySubscriptions.length > 4 && (
+          <div className="text-xs text-gray-400">+{daySubscriptions.length - 4}</div>
+        )}
       </div>
     )
   }
@@ -95,10 +98,10 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             </IconContext.Provider>
             <span className={`ml-2 text-lg ${ibmPlexMonoBold.className}`}>{hoveredSubscription.name}</span>
           </div>
-          <p className={`${ibmPlexMonoRegular.className}`}>${hoveredSubscription.amount.toFixed(2)}</p>
-          <p className={`${ibmPlexMonoThin.className}`}>{hoveredSubscription.frequency}</p>
-          <p className={`${ibmPlexMonoThin.className}`}>Next payment: {hoveredSubscription.date}</p>
-          <p className={`${ibmPlexMonoThin.className}`}>Total since {hoveredSubscription.startDate}</p>
+          <p className={`${ibmPlexMonoBold.className}`}>${hoveredSubscription.amount.toFixed(2)}</p>
+          <p>{hoveredSubscription.frequency}</p>
+          <p>Next payment: {hoveredSubscription.date}</p>
+          <p>Total since {hoveredSubscription.startDate}</p>
           <p className={`${ibmPlexMonoBold.className}`}>${hoveredSubscription.totalSpent.toFixed(2)}</p>
         </motion.div>
       )}
