@@ -2,13 +2,10 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 
-const ibmPlexMonoThinItalic = localFont({
-  src: "./fonts/IBMPlexMono-ThinItalic.ttf",
-  variable: "--font-ibm-plex-mono-thin-italic",
-});
-const ibmPlexMonoThin = localFont({
-  src: "./fonts/IBMPlexMono-Thin.ttf",
-  variable: "--font-ibm-plex-mono-thin",
+// Definimos la fuente Circular, similar a la utilizada por Spotify
+const circularStd = localFont({
+  src: './fonts/CircularStd-Book.ttf',
+  variable: '--font-circular-std',
 });
 
 export const metadata: Metadata = {
@@ -24,7 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${ibmPlexMonoThinItalic.variable} ${ibmPlexMonoThin.variable} antialiased bg-black text-white`}
+        className={`${circularStd.variable} font-sans antialiased bg-black text-white`}
       >
         {children}
       </body>

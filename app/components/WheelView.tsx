@@ -10,20 +10,32 @@ type WheelViewProps = {
   hoveredSubscription: Subscription | null
 }
 
+type CombinedSubscription = Subscription & { count: number }
+
 const WheelView: React.FC<WheelViewProps> = ({
   subscriptions,
   monthlySpend,
   setHoveredSubscription,
   hoveredSubscription,
 }) => {
-  const totalAmount = subscriptions.reduce((sum, sub) => sum + sub.amount, 0)
+  const combinedSubscriptions = subscriptions.reduce((acc, sub) => {
+    const existingSub = acc.find(s => s.name === sub.name)
+    if (existingSub) {
+      existingSub.amount += sub.amount
+      existingSub.count += 1
+    } else {
+      acc.push({ ...sub, count: 1 })
+    }
+    return acc
+  }, [] as CombinedSubscription[])
+
+  const totalAmount = combinedSubscriptions.reduce((sum, sub) => sum + sub.amount, 0)
   let startAngle = 0
 
-  const outerCircleRadius = 270  // Radio del círculo de los arcos
+  const outerCircleRadius = 270
 
   return (
     <div className="relative h-[300px] sm:h-[600px] w-full">
-      {/* SVG para los arcos */}
       <svg width="100%" height="100%" viewBox="0 0 600 600">
         <motion.circle 
           cx="300" 
@@ -36,7 +48,7 @@ const WheelView: React.FC<WheelViewProps> = ({
           animate={{ pathLength: 1 }}
           transition={{ duration: 1, ease: "easeInOut" }}
         />
-        {subscriptions.map((sub, index) => {
+        {combinedSubscriptions.map((sub, index) => {
           const angle = (sub.amount / totalAmount) * 360
           const endAngle = startAngle + angle
           const largeArcFlag = angle > 180 ? 1 : 0
@@ -85,7 +97,6 @@ const WheelView: React.FC<WheelViewProps> = ({
         })}
       </svg>
 
-      {/* Información de la suscripción o valor mensual al pasar el ratón */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -104,6 +115,11 @@ const WheelView: React.FC<WheelViewProps> = ({
             <p className={`${ibmPlexMonoRegular.className}`}>
               ${hoveredSubscription.amount.toFixed(2)} / {hoveredSubscription.frequency}
             </p>
+            {(hoveredSubscription as CombinedSubscription).count > 1 && (
+              <p className={`${ibmPlexMonoRegular.className}`}>
+                {(hoveredSubscription as CombinedSubscription).count} subscriptions
+              </p>
+            )}
           </>
         ) : (
           <>
