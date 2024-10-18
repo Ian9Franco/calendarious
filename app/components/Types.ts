@@ -1,31 +1,28 @@
-import { IconType } from 'react-icons'
-import { FaSpotify, FaLinkedin, FaAmazon, FaMedium, FaApple } from 'react-icons/fa'
-import { SiLinear, SiNetflix, SiSupabase } from 'react-icons/si'
 import localFont from 'next/font/local'
 
 // Definición del tipo Subscription
 export type Subscription = {
-  name: string // Nombre de la suscripción
-  icon: IconType // Icono de la suscripción (fallback)
-  image?: string // Ruta de la imagen PNG para el icono
-  color: string // Color asociado a la suscripción
-  amount: number // Monto de la suscripción
-  date: number // Fecha de pago (día del mes)
-  frequency: string // Frecuencia de pago (ej. "Monthly")
-  totalSpent: number // Total gastado en esta suscripción
-  startDate: string // Fecha de inicio de la suscripción
+  name: string
+  image: string
+  color: string
+  amount: number
+  date: number
+  frequency: string
+  totalSpent: number
+  startDate: string
 }
 
 // Lista de suscripciones disponibles
 export const availableSubscriptions: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>[] = [
-  { name: 'Netflix', icon: SiNetflix, image: '/brand/netflix.png', color: '#E50914', amount: 12.99, frequency: 'Monthly' },
-  { name: 'Spotify', icon: FaSpotify, image: '../public/brand/Spotify.png', color: '#1DB954', amount: 9.99, frequency: 'Monthly' },
-  { name: 'LinkedIn', icon: FaLinkedin, image: '/brand/linkedin.png', color: '#0A66C2', amount: 8.99, frequency: 'Monthly' },
-  { name: 'Amazon', icon: FaAmazon, image: '/brand/amazon.png', color: '#FF9900', amount: 7.99, frequency: 'Monthly' },
-  { name: 'Medium', icon: FaMedium, image: '/brand/medium.png', color: '#00AB6C', amount: 5, frequency: 'Monthly' },
-  { name: 'iCloud', icon: FaApple, image: '/brand/icloud.png', color: '#A2AAAD', amount: 0.99, frequency: 'Monthly' },
-  { name: 'Linear', icon: SiLinear, image: '/brand/linear.png', color: '#5E6AD2', amount: 6.99, frequency: 'Monthly' },
-  { name: 'Supabase', icon: SiSupabase, image: '/brand/supabase.png', color: '#3ECF8E', amount: 7.99, frequency: 'Monthly' },
+  { name: 'Netflix', image: '/brand/Netflix.png', color: '#E50914', amount: 12.99, frequency: 'Monthly' },
+  { name: 'Spotify', image: '/brand/Spotify.png', color: '#1DB954', amount: 9.99, frequency: 'Monthly' },
+  { name: 'LinkedIn', image: '/brand/LinkedIn.png', color: '#0A66C2', amount: 8.99, frequency: 'Monthly' },
+  { name: 'Amazon', image: '/brand/Amazon.png', color: '#FF9900', amount: 7.99, frequency: 'Monthly' },
+  { name: 'Disney', image: '/brand/Disney.png', color: '#113CCF', amount: 7.99, frequency: 'Monthly' },
+  { name: 'HBO Max', image: '/brand/hbomax.png', color: '#5E2DEB', amount: 5, frequency: 'Monthly' },
+  { name: 'Paramount', image: '/brand/paramount.png', color: '#0064FF', amount: 0.99, frequency: 'Monthly' },
+  { name: 'Apple TV', image: '/brand/AppleTV.png', color: '#000000', amount: 6.99, frequency: 'Monthly' },
+  { name: 'Discord', image: '/brand/discord.png', color: '#5865F2', amount: 7.99, frequency: 'Monthly' },
 ]
 
 // Definición de fuentes personalizadas

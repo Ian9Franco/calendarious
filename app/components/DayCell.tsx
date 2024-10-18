@@ -1,69 +1,77 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { IconContext } from 'react-icons'
+import Image from 'next/image'
 import { Subscription } from './Types'
 
-interface DayCellProps {
-  day: number
-  isCurrentMonth: boolean
-  subscriptions: Subscription[]
-  onClick: () => void
+interface DayProps {
+  classNames: string
+  day: {
+    day: string
+    subscriptions: Subscription[]
+  }
   onHover: (day: string | null) => void
+  onDayClick: () => void
+  onSubscriptionClick: (subscription: Subscription) => void
 }
 
-const DayCell: React.FC<DayCellProps> = ({ day, isCurrentMonth, subscriptions, onClick, onHover }) => {
-  const borderColors = subscriptions.map(sub => sub.color).join(', ')
-
+const Day: React.FC<DayProps> = ({ classNames, day, onHover, onDayClick, onSubscriptionClick }) => {
   return (
     <motion.div
-      className={`aspect-square flex flex-col items-center justify-between p-1 sm:p-2 rounded-lg ${
-        isCurrentMonth ? 'bg-gray-800' : 'bg-gray-900'
-      } cursor-pointer relative overflow-hidden`}
-      onClick={onClick}
-      onMouseEnter={() => onHover(day.toString())}
+      className={`aspect-square flex flex-col items-center justify-between p-1 sm:p-2 rounded-lg ${classNames} cursor-pointer relative overflow-hidden`}
+      onClick={onDayClick}
+      onMouseEnter={() => onHover(day.day)}
       onMouseLeave={() => onHover(null)}
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
-      layout
     >
-      {isCurrentMonth && (
-        <>
-          <span className="text-xs sm:text-base text-white">{day}</span>
-          <div className="flex flex-wrap justify-center items-center gap-1 mt-1">
-            {subscriptions.slice(0, 2).map((sub, index) => (
-              <motion.div
-                key={index}
-                className="rounded-full flex items-center justify-center"
-                style={{ 
-                  backgroundColor: sub.color,
-                  width: '16px',
-                  height: '16px'
-                }}
-                whileHover={{ scale: 1.2 }}
-                whileTap={{ scale: 0.9 }}
-                layout
-              >
-                <IconContext.Provider value={{ size: '10px', color: 'white' }}>
-                  <sub.icon />
-                </IconContext.Provider>
-              </motion.div>
-            ))}
-            {subscriptions.length > 2 && (
-              <div className="text-xs text-gray-400">+{subscriptions.length - 2}</div>
-            )}
-          </div>
-        </>
+      <span className="text-xs sm:text-base text-white">{day.day}</span>
+      {day.subscriptions.length > 0 && (
+        <div className="flex justify-start items-center mt-1 relative h-6 w-full">
+          {day.subscriptions.slice(0, 3).map((sub, index) => (
+            <motion.div
+              key={index}
+              className="flex items-center justify-center absolute cursor-pointer rounded-full overflow-hidden"
+              style={{ 
+                left: `${index * 16}px`,
+                zIndex: 3 - index,
+                width: '20px',
+                height: '20px'
+              }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                onSubscriptionClick(sub)
+              }}
+            >
+              <Image
+                src={sub.image}
+                alt={sub.name}
+                width={20}
+                height={20}
+                className="object-cover"
+              />
+            </motion.div>
+          ))}
+          {day.subscriptions.length > 3 && (
+            <motion.div
+              className="flex items-center justify-center absolute bg-gray-600 text-white text-xs font-bold cursor-pointer rounded-full"
+              style={{ 
+                left: '48px',
+                zIndex: 4,
+                width: '20px',
+                height: '20px'
+              }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              +{day.subscriptions.length - 3}
+            </motion.div>
+          )}
+        </div>
       )}
-      <motion.div
-        className="absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
-        style={{
-          background: `linear-gradient(45deg, ${borderColors})`,
-          filter: 'blur(10px)',
-          zIndex: -1,
-        }}
-      />
     </motion.div>
   )
 }
 
-export default DayCell
+export default Day

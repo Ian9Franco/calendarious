@@ -1,6 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
-import { IconContext } from 'react-icons'
+import Image from 'next/image'
 import { Subscription, ibmPlexMonoBold, ibmPlexMonoBoldItalic } from './Types'
 
 type CalendarViewProps = {
@@ -18,18 +18,13 @@ const CalendarView: React.FC<CalendarViewProps> = ({
   setHoveredSubscription,
   hoveredSubscription,
 }) => {
-  // Calculate the number of days in the current month
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()
-  // Get the day of the week for the first day of the month (0-6, where 0 is Sunday)
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay()
-  // Get the current day of the month
   const today = new Date().getDate()
 
-  // Function to render subscription icons for each day
   const renderSubscriptionIcons = (daySubscriptions: Subscription[]) => {
     return (
       <div className="flex flex-wrap justify-center items-center gap-1 mt-1">
-        {/* Render up to 4 subscription icons */}
         {daySubscriptions.slice(0, 4).map((sub, index) => (
           <motion.div
             key={index}
@@ -45,12 +40,14 @@ const CalendarView: React.FC<CalendarViewProps> = ({
             whileTap={{ scale: 0.9 }}
             layout
           >
-            <IconContext.Provider value={{ size: '10px', color: 'white' }}>
-              <sub.icon />
-            </IconContext.Provider>
+            <Image
+              src={sub.image}
+              alt={sub.name}
+              width={10}
+              height={10}
+            />
           </motion.div>
         ))}
-        {/* If there are more than 4 subscriptions, show a count of the extras */}
         {daySubscriptions.length > 4 && (
           <div className="text-xs text-gray-400">+{daySubscriptions.length - 4}</div>
         )}
@@ -60,13 +57,11 @@ const CalendarView: React.FC<CalendarViewProps> = ({
 
   return (
     <div className="relative w-full h-full max-w-3xl mx-auto p-4">
-      {/* Render weekday labels */}
       <div className="grid grid-cols-7 gap-2 mb-4">
         {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
           <div key={day} className={`text-center text-xs sm:text-sm p-1 sm:p-2 bg-gray-700 rounded-full ${ibmPlexMonoBoldItalic.className}`}>{day}</div>
         ))}
       </div>
-      {/* Render calendar grid */}
       <div className="grid grid-cols-7 gap-1 sm:gap-2">
         {Array.from({ length: 42 }, (_, i) => {
           const day = i - firstDayOfMonth + 1
@@ -94,7 +89,6 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           )
         })}
       </div>
-      {/* Render hovered subscription details */}
       {hoveredSubscription && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -104,9 +98,12 @@ const CalendarView: React.FC<CalendarViewProps> = ({
           style={{ border: `2px solid ${hoveredSubscription.color}` }}
         >
           <div className="flex items-center mb-2">
-            <IconContext.Provider value={{ size: '2em', color: hoveredSubscription.color }}>
-              <hoveredSubscription.icon />
-            </IconContext.Provider>
+            <Image
+              src={hoveredSubscription.image}
+              alt={hoveredSubscription.name}
+              width={32}
+              height={32}
+            />
             <span className={`ml-2 text-lg ${ibmPlexMonoBold.className}`}>{hoveredSubscription.name}</span>
           </div>
           <p className={`${ibmPlexMonoBold.className}`}>${hoveredSubscription.amount.toFixed(2)}</p>

@@ -1,72 +1,65 @@
 import React from 'react'
-import { motion } from 'framer-motion'
-import { IconContext } from 'react-icons'
-import { Subscription } from './Types'
+import { Subscription, availableSubscriptions, ibmPlexMonoBold, ibmPlexMonoRegular } from './Types'
+import { X } from 'lucide-react'
+import Image from 'next/image'
 
-interface SubscriptionSelectorProps {
+type SubscriptionSelectorProps = {
   selectedDate: number | null
-  subscriptions: Subscription[]
   addSubscription: (subscription: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>, date: number) => void
   onClose: () => void
-  availableSubscriptions: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>[]
+  isDarkMode: boolean
 }
 
 const SubscriptionSelector: React.FC<SubscriptionSelectorProps> = ({
   selectedDate,
   addSubscription,
   onClose,
-  availableSubscriptions,
+  isDarkMode,
 }) => {
-  const handleAddSubscription = (subscription: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>) => {
-    if (selectedDate) {
-      addSubscription(subscription, selectedDate)
-    }
+  if (!selectedDate) return null
+
+  const handleSubscriptionClick = (sub: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>) => {
+    addSubscription(sub, selectedDate)
+    onClose()
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0.9 }}
-        className="bg-gray-800 p-6 rounded-lg max-w-md w-full"
-        onClick={e => e.stopPropagation()}
-      >
-        <h2 className="text-2xl font-bold mb-4 text-white">Add Subscription</h2>
-        <div className="space-y-2">
-          {availableSubscriptions.map((subscription) => (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isDarkMode ? 'bg-black bg-opacity-50' : 'bg-gray-200 bg-opacity-75'}`}>
+      <div className={`${isDarkMode ? 'bg-gray-900' : 'bg-white'} rounded-lg p-6 w-96 max-w-full`}>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'} ${ibmPlexMonoBold.className}`}>
+            Add subscription for day {selectedDate}
+          </h3>
+          <button
+            onClick={onClose}
+            className={`${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {availableSubscriptions.map((sub) => (
             <button
-              key={subscription.name}
-              onClick={() => handleAddSubscription(subscription)}
-              className="w-full text-left p-3 bg-gray-700 hover:bg-gray-600 rounded-md flex items-center justify-between transition-colors"
+              key={sub.name}
+              className={`flex flex-col items-center p-2 ${
+                isDarkMode ? 'bg-gray-800 hover:bg-gray-700' : 'bg-gray-100 hover:bg-gray-200'
+              } rounded-lg transition-colors`}
+              onClick={() => handleSubscriptionClick(sub)}
             >
-              <div className="flex items-center">
-                <IconContext.Provider value={{ size: '1.5em', color: subscription.color }}>
-                  <subscription.icon />
-                </IconContext.Provider>
-                <span className="text-white ml-2">{subscription.name}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-green-400">€{subscription.amount.toFixed(2)}</span>
-                <span className="text-gray-400 text-sm block">{subscription.frequency}</span>
-              </div>
+              <Image
+                src={sub.image}
+                alt={sub.name}
+                width={40}
+                height={40}
+                className="rounded-full mb-2"
+              />
+              <p className={`text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'} ${ibmPlexMonoBold.className}`}>{sub.name}</p>
+              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'} ${ibmPlexMonoRegular.className}`}>${sub.amount}</p>
             </button>
           ))}
         </div>
-        <button
-          onClick={onClose}
-          className="mt-4 w-full bg-gray-700 text-white p-2 rounded-md hover:bg-gray-600 transition-colors"
-        >
-          Close
-        </button>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   )
 }
 
