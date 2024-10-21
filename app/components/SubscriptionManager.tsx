@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Subscription } from './Types'
+import { Subscription } from '../utils/Types'
 
 interface SubscriptionManagerProps {
   subscriptions: Subscription[]

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Subscription, availableSubscriptions, ibmPlexMonoBold, ibmPlexMonoRegular } from './Types'
+import { Subscription, availableSubscriptions, ibmPlexMonoBold, ibmPlexMonoRegular } from '../utils/Types'
 import { X } from 'lucide-react'
 import Image from 'next/image'
 
@@ -18,8 +18,8 @@ const SubscriptionSelector: React.FC<SubscriptionSelectorProps> = ({
 }) => {
   if (!selectedDate) return null
 
-  const handleSubscriptionClick = (sub: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>) => {
-    addSubscription(sub, selectedDate)
+  const handleSubscriptionClick = (sub: Omit<Subscription, 'date' | 'totalSpent' | 'startDate' | 'description' | 'pausedUntil'>) => {
+    addSubscription({ ...sub, description: '' }, selectedDate)
     onClose()
   }
 

@@ -1,44 +1,57 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, useAnimation } from 'framer-motion'
 import Image from 'next/image'
-import { Subscription, ibmPlexMonoThin, ibmPlexMonoBold } from './Types'
+import { Subscription, ibmPlexMonoThin, ibmPlexMonoBold, ibmPlexMonoRegular } from '../utils/Types'
+import { getLastThreeMonthsPayments, calculateMonthlySpend, isSubscriptionPaused } from '../utils/expenseCalculations'
+import { DollarSign } from 'lucide-react'
 
 interface WheelViewProps {
   subscriptions: Subscription[]
   setHoveredSubscription: (subscription: Subscription | null) => void
   isDarkMode: boolean
   onSubscriptionClick: (subscriptions: Subscription[], date: number, event: React.MouseEvent) => void
-  monthlySpend: number
+  currentDate: Date
+  onPayMonth: () => void
 }
 
-type CombinedSubscription = Subscription & { count: number }
+type CombinedSubscription = Subscription & { count: number; isPaused: boolean }
 
 const WheelView: React.FC<WheelViewProps> = ({
   subscriptions,
   setHoveredSubscription,
   isDarkMode,
   onSubscriptionClick,
-  monthlySpend,
+  currentDate,
+  onPayMonth,
 }) => {
+  const [showLastThreeMonths, setShowLastThreeMonths] = useState(false)
+  const lastThreeMonthsPayments = getLastThreeMonthsPayments(subscriptions, currentDate)
+
   const combinedSubscriptions = subscriptions.reduce((acc, sub) => {
-    const existingSub = acc.find(s => s.name === sub.name)
-    if (existingSub) {
-      existingSub.amount += sub.amount
-      existingSub.count += 1
-    } else {
-      acc.push({ ...sub, count: 1 })
+    const startDate = new Date(sub.startDate)
+    const isPaused = isSubscriptionPaused(sub, currentDate)
+    
+    if (startDate <= currentDate) {
+      const existingSub = acc.find(s => s.name === sub.name && s.date === sub.date)
+      if (existingSub) {
+        existingSub.amount += sub.amount
+        existingSub.count += 1
+      } else {
+        acc.push({ ...sub, count: 1, isPaused })
+      }
     }
     return acc
   }, [] as CombinedSubscription[])
 
-  const totalAmount = combinedSubscriptions.reduce((sum, sub) => sum + sub.amount, 0)
+  const totalAmount = calculateMonthlySpend(subscriptions, currentDate)
   let startAngle = 0
 
-  const outerRadius = 200
-  const innerRadius = 160
-  const iconSize = 40
-  const totalGapAngle = 0.2 // Ángulo total reservado para los espacios entre segmentos
-  const gapAngle = totalGapAngle / combinedSubscriptions.length // Distribuir el espacio uniformemente
+  const centerX = 250
+  const centerY = 250
+  const radius = 200
+  const strokeWidth = 40
+  const gapAngle = 0.02 // radians
+  const iconOffset = 30 // Distance of icons from the ring
 
   const controls = useAnimation()
   const svgRef = useRef<SVGSVGElement>(null)
@@ -58,122 +71,100 @@ const WheelView: React.FC<WheelViewProps> = ({
     }
   }
 
-  // Función para crear el camino del arco con bordes redondeados
-  const arcPath = (startAngle: number, endAngle: number, outerRadius: number, innerRadius: number) => {
-    const startOuter = polarToCartesian(250, 250, outerRadius, startAngle)
-    const endOuter = polarToCartesian(250, 250, outerRadius, endAngle)
-    const startInner = polarToCartesian(250, 250, innerRadius, endAngle)
-    const endInner = polarToCartesian(250, 250, innerRadius, startAngle)
-
+  const arcPath = (startAngle: number, endAngle: number) => {
+    const start = polarToCartesian(centerX, centerY, radius, endAngle)
+    const end = polarToCartesian(centerX, centerY, radius, startAngle)
     const largeArcFlag = endAngle - startAngle <= Math.PI ? 0 : 1
-
-    // NOTA: Los bordes aún parecen puntiagudos porque estamos usando arcos circulares simples.
-    // Para lograr bordes verdaderamente redondeados, necesitaríamos implementar curvas de Bézier
-    // en las esquinas internas y externas del segmento.
-    return `
-      M ${startOuter.x} ${startOuter.y}
-      A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuter.x} ${endOuter.y}
-      L ${startInner.x} ${startInner.y}
-      A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${endInner.x} ${endInner.y}
-      Z
-    `
+    return `M ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`
   }
 
   return (
-    <div className="relative h-[500px] w-full">
-      <svg ref={svgRef} width="100%" height="100%" viewBox="0 0 500 500">
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3.5" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
-        {combinedSubscriptions.map((sub, index) => {
-          const angle = (sub.amount / totalAmount) * (2 * Math.PI - totalGapAngle)
-          const endAngle = startAngle + angle
+    <div className="relative w-full h-[500px] flex items-center justify-center">
+      <svg ref={svgRef} width="500" height="500" viewBox="0 0 500 500" className="transform -rotate-90">
+        {combinedSubscriptions.map((subscription, index) => {
+          const percentage = subscription.amount / totalAmount
+          const angle = 2 * Math.PI * percentage
+          const endAngle = startAngle + angle - gapAngle
+
+          const path = arcPath(startAngle, endAngle)
+
           const midAngle = (startAngle + endAngle) / 2
+          const iconRadius = radius + strokeWidth / 2 + iconOffset
+          const iconX = centerX + iconRadius * Math.cos(midAngle)
+          const iconY = centerY + iconRadius * Math.sin(midAngle)
 
-          // Creamos el camino del arco con un pequeño espacio entre segmentos
-          const path = arcPath(startAngle + gapAngle / 2, endAngle - gapAngle / 2, outerRadius, innerRadius)
-
-          const iconPosition = polarToCartesian(250, 250, outerRadius + 30, midAngle)
-
-          startAngle = endAngle + gapAngle
-
-          return (
-            <g 
-              key={sub.name} 
-              onMouseEnter={() => setHoveredSubscription(sub)} 
-              onMouseLeave={() => setHoveredSubscription(null)}
-              onClick={(event) => onSubscriptionClick(subscriptions.filter(s => s.name === sub.name), sub.date, event)}
-              style={{ cursor: 'pointer' }}
-            >
-              <motion.path 
-                d={path} 
-                fill={sub.color}
-                opacity={0}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+          const segment = (
+            <g key={index}>
+              <motion.path
+                d={path}
+                fill="none"
+                stroke={subscription.isPaused ? `rgba(${isDarkMode ? '255,255,255' : '0,0,0'}, 0.3)` : subscription.color}
+                strokeWidth={strokeWidth}
                 initial={{ pathLength: 0, opacity: 0 }}
                 animate={controls}
                 custom={index}
-                filter="url(#glow)"
+                onMouseEnter={() => setHoveredSubscription(subscription)}
+                onMouseLeave={() => setHoveredSubscription(null)}
+                onClick={(event) => onSubscriptionClick([subscription], subscription.date, event)}
+                style={{ cursor: 'pointer' }}
               />
-              <motion.foreignObject 
-                x={iconPosition.x - iconSize / 2} 
-                y={iconPosition.y - iconSize / 2} 
-                width={iconSize} 
-                height={iconSize}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-              >
+              <foreignObject x={iconX - 15} y={iconY - 15} width={30} height={30}>
                 <div className="flex items-center justify-center w-full h-full">
                   <Image
-                    src={sub.image}
-                    alt={sub.name}
-                    width={iconSize}
-                    height={iconSize}
-                    className="object-contain rounded-full"
+                    src={subscription.image}
+                    alt={subscription.name}
+                    width={24}
+                    height={24}
+                    className={`rounded-full ${subscription.isPaused ? 'opacity-50' : ''}`}
                   />
                 </div>
-              </motion.foreignObject>
-              {sub.count > 1 && (
-                <text
-                  x={iconPosition.x + iconSize / 2 + 5}
-                  y={iconPosition.y + iconSize / 2 + 5}
-                  fontSize="12"
-                  fill={isDarkMode ? "#fff" : "#000"}
-                  className={ibmPlexMonoBold.className}
-                >
-                  +{sub.count - 1}
-                </text>
-              )}
+              </foreignObject>
             </g>
           )
+
+          startAngle = endAngle + gapAngle
+          return segment
         })}
-        <text
-          x="250"
-          y="230"
-          textAnchor="middle"
-          className={`${ibmPlexMonoThin.className} text-2xl`}
-          fill={isDarkMode ? "#fff" : "#000"}
-        >
-          Monthly spend
-        </text>
-        <text
-          x="250"
-          y="270"
-          textAnchor="middle"
-          className={`${ibmPlexMonoBold.className} text-4xl`}
-          fill={isDarkMode ? "#fff" : "#000"}
-        >
-          €{monthlySpend.toFixed(2)}
-        </text>
       </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div 
+          className={`text-center ${isDarkMode ? 'text-white' : 'text-gray-800'} cursor-pointer mb-2`}
+          onClick={() => setShowLastThreeMonths(!showLastThreeMonths)}
+        >
+          <p className={`text-4xl font-bold ${ibmPlexMonoBold.className}`}>€{totalAmount.toFixed(2)}</p>
+          <p className={`text-sm ${ibmPlexMonoThin.className}`}>Total para {currentDate.toLocaleString('es-ES', { month: 'long' })}</p>
+        </div>
+        <button
+          onClick={onPayMonth}
+          className={`flex items-center justify-center px-4 py-2 rounded-full ${
+            isDarkMode ? 'bg-green-600 hover:bg-green-700' : 'bg-green-500 hover:bg-green-600'
+          } text-white transition-colors duration-200`}
+        >
+          <DollarSign size={18} className="mr-2" />
+          <span className={`${ibmPlexMonoRegular.className}`}>Pagar Mes</span>
+        </button>
+      </div>
+      {showLastThreeMonths && (
+        <div className={`absolute top-full mt-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
+          <h3 className={`text-lg font-bold mb-2 ${ibmPlexMonoBold.className}`}>Últimos 3 meses</h3>
+          <table className={`w-full ${ibmPlexMonoRegular.className}`}>
+            <thead>
+              <tr>
+                <th className="text-left">Mes</th>
+                <th className="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {lastThreeMonthsPayments.map(({ month, total }) => (
+                <tr key={month}>
+                  <td>{month}</td>
+                  <td className="text-right">€{total.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

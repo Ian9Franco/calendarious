@@ -1,32 +1,45 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
-import { Subscription } from './Types'
-import { X } from 'lucide-react'
+import { Subscription } from '../utils/Types'
+import { X, ChevronDown } from 'lucide-react'
+import DetailedSubscriptionView from './DetailedSubscriptionView'
 
 interface SubscriptionListProps {
   subscriptions: Subscription[]
   deleteSubscription: (subscription: Subscription) => void
   isDarkMode: boolean
-  onSubscriptionClick: (subscriptions: Subscription[], date: number, event: React.MouseEvent) => void
+  onUpdateSubscription: (updatedSubscription: Subscription) => void
+  onSubscriptionClick: (subscription: Subscription) => void
+  currentDate: Date
 }
 
 const SubscriptionList: React.FC<SubscriptionListProps> = ({ 
   subscriptions, 
   deleteSubscription, 
   isDarkMode,
-  onSubscriptionClick 
+  onUpdateSubscription,
+  onSubscriptionClick,
+  currentDate
 }) => {
+  const [expandedSubscription, setExpandedSubscription] = useState<Subscription | null>(null)
+
+  const handleViewDetails = (subscription: Subscription, event: React.MouseEvent) => {
+    event.stopPropagation()
+    setExpandedSubscription(expandedSubscription === subscription ? null : subscription)
+  }
+
   return (
     <AnimatePresence>
       {subscriptions.map((subscription) => (
         <motion.div
           key={`${subscription.name}-${subscription.date}`}
-          className={`py-4 px-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'} last:border-b-0 w-full`}
+          className={`py-4 px-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'} last:border-b-0 w-full cursor-pointer`}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
           transition={{ duration: 0.2 }}
+          onClick={() => onSubscriptionClick(subscription)}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center">
@@ -66,14 +79,29 @@ const SubscriptionList: React.FC<SubscriptionListProps> = ({
               Cancelar Suscripción
             </button>
             <button
-              onClick={(event) => onSubscriptionClick([subscription], subscription.date, event)}
+              onClick={(event) => handleViewDetails(subscription, event)}
               className={`px-4 py-2 ${isDarkMode ? 'bg-gray-700 text-white hover:bg-gray-600' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'} rounded-md text-sm transition-colors flex items-center`}
             >
               Ver Detalles
+              <ChevronDown
+                size={16}
+                className={`ml-1 transform transition-transform ${expandedSubscription === subscription ? 'rotate-180' : ''}`}
+              />
             </button>
           </div>
         </motion.div>
       ))}
+      <AnimatePresence>
+        {expandedSubscription && (
+          <DetailedSubscriptionView
+            subscription={expandedSubscription}
+            onClose={() => setExpandedSubscription(null)}
+            isDarkMode={isDarkMode}
+            onUpdateSubscription={onUpdateSubscription}
+            currentDate={currentDate}
+          />
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   )
 }

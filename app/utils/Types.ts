@@ -1,19 +1,23 @@
 import localFont from 'next/font/local'
 
 // Definición del tipo Subscription
-export type Subscription = {
-  name: string
-  image: string
-  color: string
-  amount: number
-  date: number
-  frequency: string
-  totalSpent: number
-  startDate: string
+export interface Subscription {
+  name: string;
+  amount: number;
+  date: number;
+  frequency: string;
+  color: string;
+  image: string;
+  totalSpent: number;
+  startDate: string;
+  description: string;
+  pausedUntil?: string;
+  nextPaymentDate?: string;
+
 }
 
 // Lista de suscripciones disponibles
-export const availableSubscriptions: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>[] = [
+export const availableSubscriptions: Omit<Subscription, 'date' | 'totalSpent' | 'startDate' | 'description' | 'pausedUntil'>[] = [
   { name: 'Netflix', image: '/brand/Netflix.png', color: '#E50914', amount: 12.99, frequency: 'Monthly' },
   { name: 'Spotify', image: '/brand/Spotify.png', color: '#1DB954', amount: 9.99, frequency: 'Monthly' },
   { name: 'LinkedIn', image: '/brand/LinkedIn.png', color: '#0A66C2', amount: 8.99, frequency: 'Monthly' },

@@ -1,92 +1,123 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
-import { Subscription, ibmPlexMonoBold, ibmPlexMonoRegular } from './Types'
-import { Download } from 'lucide-react'
+import { Subscription, ibmPlexMonoBold, ibmPlexMonoRegular } from '../utils/Types'
+import { X, Calendar, DollarSign, Clock, BarChart2 } from 'lucide-react'
 
-interface SubscriptionDetailProps {
-  subscriptions: Subscription[]
-  selectedDate: number
-  onCancel: (subscription: Subscription) => void
-  onPause: (subscription: Subscription) => void
+interface DetailedSubscriptionViewProps {
+  subscription: Subscription
   onClose: () => void
   isDarkMode: boolean
+  position: { x: number; y: number }
 }
 
-const SubscriptionDetail: React.FC<SubscriptionDetailProps> = ({ 
-  subscriptions, 
-  selectedDate, 
-  onCancel, 
-  onPause, 
+const DetailedSubscriptionView: React.FC<DetailedSubscriptionViewProps> = ({
+  subscription,
   onClose,
-  isDarkMode
+  isDarkMode,
+  position,
 }) => {
-  const subscription = subscriptions[0] // Assuming we're showing details for the first subscription
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  if (!subscription) return null
+  useEffect(() => {
+    // Función para ajustar la posición del popup
+    const adjustPosition = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect()
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
 
-  const receipts = [
-    { month: 'August 2024', amount: subscription.amount },
-    { month: 'July 2024', amount: subscription.amount },
-    { month: 'June 2024', amount: subscription.amount },
-    { month: 'May 2024', amount: subscription.amount },
-    { month: 'April 2024', amount: subscription.amount },
-  ]
+        // Calcular las nuevas coordenadas
+        let newX = position.x
+        let newY = position.y
 
-  const totalSpend = receipts.reduce((total, receipt) => total + receipt.amount, 0)
+        // Ajustar horizontalmente si se sale de la pantalla
+        if (newX + rect.width > viewportWidth) {
+          newX = viewportWidth - rect.width - 10 // 10px de margen
+        }
+
+        // Ajustar verticalmente si se sale de la pantalla
+        if (newY + rect.height > viewportHeight) {
+          newY = viewportHeight - rect.height - 10 // 10px de margen
+        }
+
+        // Aplicar las nuevas coordenadas
+        containerRef.current.style.left = `${newX}px`
+        containerRef.current.style.top = `${newY}px`
+      }
+    }
+
+    // Ajustar la posición inicial
+    adjustPosition()
+
+    // Agregar event listener para ajustar la posición en caso de que cambie el tamaño de la ventana
+    window.addEventListener('resize', adjustPosition)
+
+    // Limpiar el event listener al desmontar el componente
+    return () => {
+      window.removeEventListener('resize', adjustPosition)
+    }
+  }, [position])
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className={`fixed inset-0 z-50 flex items-center justify-center ${isDarkMode ? 'bg-black bg-opacity-50' : 'bg-gray-200 bg-opacity-75'}`}
-      onClick={onClose}
+      ref={containerRef}
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.2 }}
+      className="fixed z-50 w-80 rounded-lg shadow-lg"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        maxWidth: 'calc(100vw - 40px)',
+        maxHeight: 'calc(100vh - 40px)',
+        overflow: 'auto',
+      }}
     >
-      <div 
-        className={`rounded-lg p-6 w-96 max-w-full relative ${isDarkMode ? 'bg-[#1e1e1e] text-white' : 'bg-white text-gray-800'}`}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={`p-4 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className={`text-xl ${ibmPlexMonoBold.className}`}>{subscription.name}</h2>
+          <button onClick={onClose} className={`${isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+            <X size={24} />
+          </button>
+        </div>
         <div className="flex items-center mb-4">
-          <Image src={subscription.image} alt={subscription.name} width={40} height={40} className="rounded-full mr-4" />
+          <Image
+            src={subscription.image}
+            alt={subscription.name}
+            width={64}
+            height={64}
+            className="rounded-full mr-4"
+          />
           <div>
-            <h3 className={`text-lg ${ibmPlexMonoBold.className}`}>{subscription.name}</h3>
-            <p className={`text-sm ${ibmPlexMonoRegular.className} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Every month on the {selectedDate}</p>
+            <p className={`${ibmPlexMonoRegular.className} text-sm`}>{subscription.name}</p>
           </div>
         </div>
-        <div className={`text-2xl ${ibmPlexMonoBold.className} mb-4`}>${subscription.amount.toFixed(2)}</div>
-        <h4 className={`${ibmPlexMonoBold.className} mb-2`}>Receipts</h4>
-        <div className="space-y-2 mb-4">
-          {receipts.map((receipt, index) => (
-            <div key={index} className="flex justify-between items-center">
-              <span className={`${ibmPlexMonoRegular.className} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{receipt.month}</span>
-              <div className="flex items-center">
-                <span className={`${ibmPlexMonoBold.className} mr-2`}>${receipt.amount.toFixed(2)}</span>
-                <Download size={16} className="cursor-pointer" />
-              </div>
-            </div>
-          ))}
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <Calendar className="mr-2" size={16} />
+            <p className={`${ibmPlexMonoRegular.className} text-sm`}>Próximo pago: {new Date(subscription.startDate).toLocaleDateString()}</p>
+          </div>
+          <div className="flex items-center">
+            <DollarSign className="mr-2" size={16} />
+            <p className={`${ibmPlexMonoRegular.className} text-sm`}>Monto: €{subscription.amount.toFixed(2)} / {subscription.frequency}</p>
+          </div>
+          <div className="flex items-center">
+            <Clock className="mr-2" size={16} />
+            <p className={`${ibmPlexMonoRegular.className} text-sm`}>Frecuencia: {subscription.frequency}</p>
+          </div>
+          <div className="flex items-center">
+            <BarChart2 className="mr-2" size={16} />
+            <p className={`${ibmPlexMonoRegular.className} text-sm`}>Gasto total: €{subscription.totalSpent.toFixed(2)}</p>
+          </div>
         </div>
-        <div className="flex justify-between items-center mb-4">
-          <span className={`${ibmPlexMonoRegular.className} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Total Spend</span>
-          <span className={`${ibmPlexMonoBold.className}`}>${totalSpend.toFixed(2)}</span>
-        </div>
-        <div className="flex space-x-2">
-          <button
-            onClick={() => onCancel(subscription)}
-            className="flex-1 bg-red-600 text-white py-2 rounded-md text-sm hover:bg-red-700 transition-colors"
-          >
-            Cancel Subscription
+        <div className="mt-4 flex justify-end space-x-2">
+          <button className={`px-3 py-1 rounded text-sm ${isDarkMode ? 'bg-red-800 text-white' : 'bg-red-100 text-red-800'}`}>
+            Cancelar Suscripción
           </button>
-          <button
-            onClick={() => onPause(subscription)}
-            className={`flex-1 py-2 rounded-md text-sm transition-colors ${
-              isDarkMode 
-                ? 'bg-gray-700 text-white hover:bg-gray-600' 
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-            }`}
-          >
-            Pause
+          <button className={`px-3 py-1 rounded text-sm ${isDarkMode ? 'bg-blue-800 text-white' : 'bg-blue-100 text-blue-800'}`}>
+            Pausar Suscripción
           </button>
         </div>
       </div>
@@ -94,4 +125,4 @@ const SubscriptionDetail: React.FC<SubscriptionDetailProps> = ({
   )
 }
 
-export default SubscriptionDetail
+export default DetailedSubscriptionView

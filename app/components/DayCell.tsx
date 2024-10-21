@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { Subscription } from './Types'
+import { Subscription } from '../utils/Types'
 
 interface DayProps {
   classNames: string

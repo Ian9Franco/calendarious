@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { Subscription, ibmPlexMonoBold, ibmPlexMonoBoldItalic } from './Types'
+import { Subscription, ibmPlexMonoBold, ibmPlexMonoBoldItalic } from '../utils/Types'
 
 type CalendarViewProps = {
   currentDate: Date

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Columns3, Grid, ChevronLeft, ChevronRight } from 'lucide-react'
 import CalendarGrid from './CalendarGrid'
@@ -10,10 +10,10 @@ import SubscriptionSelector from './SubscriptionSelector'
 import SubscriptionManager from './SubscriptionManager'
 import DetailedSubscriptionView from './DetailedSubscriptionView'
 import DarkModeToggle from './DarkModeToggle'
-import { Subscription } from './Types'
+import { Subscription } from '../utils/Types'
 
 export default function SubscriptionCalendar() {
-  // States
+  // Estados
   const [isWheelView, setIsWheelView] = useState(false)
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -25,17 +25,13 @@ export default function SubscriptionCalendar() {
   const [subscriptionManagerPosition, setSubscriptionManagerPosition] = useState({ x: 0, y: 0 })
   const [isFromCalendar, setIsFromCalendar] = useState(false)
   const [detailedSubscription, setDetailedSubscription] = useState<Subscription | null>(null)
-  const [detailedSubscriptionPosition, setDetailedSubscriptionPosition] = useState({ x: 0, y: 0 })
   const [direction, setDirection] = useState(0)
 
-  // Calculate monthly spend
-  const monthlySpend = useMemo(() => subscriptions.reduce((total, sub) => total + sub.amount, 0), [subscriptions])
-
-  // Utility functions
+  // Funciones de utilidad
   const toggleView = useCallback(() => setIsWheelView(prev => !prev), [])
   const toggleDarkMode = useCallback(() => setIsDarkMode(prev => !prev), [])
 
-  // Effect to apply dark mode
+  // Efecto para aplicar el modo oscuro
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark')
@@ -44,22 +40,28 @@ export default function SubscriptionCalendar() {
     }
   }, [isDarkMode])
 
-  // Function to add a new subscription
-  const addSubscription = useCallback((subscription: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>, date: number) => {
-    const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), date)
-    const newSub: Subscription = {
-      ...subscription,
-      date,
-      frequency: 'Monthly',
-      totalSpent: 0,
-      startDate: startDate.toISOString(),
-    }
-    setSubscriptions(prevSubscriptions => [...prevSubscriptions, newSub])
-    
-    setIsSubscriptionSelectorOpen(false)
-  }, [currentDate])
+ // Function to add a new subscription
+ const addSubscription = useCallback((subscription: Omit<Subscription, 'date' | 'totalSpent' | 'startDate'>, date: number) => {
+  const startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), date)
+  const newSub: Subscription = {
+    ...subscription,
+    date,
+    frequency: 'Monthly',
+    totalSpent: 0,
+    startDate: startDate.toISOString(),
+  }
+  setSubscriptions(prevSubscriptions => [...prevSubscriptions, newSub])
+  setIsSubscriptionSelectorOpen(false)
+}, [currentDate])
 
-  // Function to delete a subscription
+const onPayMonth = useCallback(() => {
+  // Implement the logic to mark the current month as paid
+  console.log('Month paid:', currentDate.toLocaleString('default', { month: 'long', year: 'numeric' }))
+  // You may want to update the subscriptions or perform other actions here
+}, [currentDate])
+
+
+  // Función para eliminar una suscripción
   const deleteSubscription = useCallback((subscriptionToDelete: Subscription) => {
     setSubscriptions(prevSubscriptions => prevSubscriptions.filter(sub => 
       !(sub.name === subscriptionToDelete.name && sub.date === subscriptionToDelete.date)
@@ -67,7 +69,7 @@ export default function SubscriptionCalendar() {
     setSelectedSubscriptions([])
   }, [])
 
-  // Handler for clicking a subscription in the calendar
+  // Manejador de clic en una suscripción del calendario
   const handleSubscriptionClick = useCallback((clickedSubscriptions: Subscription[], date: number, event: React.MouseEvent) => {
     setSelectedSubscriptions(clickedSubscriptions)
     const rect = event.currentTarget.getBoundingClientRect()
@@ -76,14 +78,12 @@ export default function SubscriptionCalendar() {
     setIsFromCalendar(true)
   }, [])
 
-  // Handler for clicking a subscription in the list
-  const handleSubscriptionListClick = useCallback((subscriptions: Subscription[], date: number, event: React.MouseEvent) => {
-    setDetailedSubscription(subscriptions[0])
-    const rect = event.currentTarget.getBoundingClientRect()
-    setDetailedSubscriptionPosition({ x: rect.right + window.scrollX, y: rect.top + window.scrollY })
+  // Manejador de clic en una suscripción de la lista
+  const handleSubscriptionListClick = useCallback((subscription: Subscription) => {
+    setDetailedSubscription(subscription)
   }, [])
 
-  // Function to change the month
+  // Función para cambiar el mes
   const changeMonth = useCallback((increment: number) => {
     setDirection(increment)
     setCurrentDate(prevDate => {
@@ -93,33 +93,42 @@ export default function SubscriptionCalendar() {
     })
   }, [])
 
-  // Function to get the month acronym
+  // Función para obtener el acrónimo del mes
   const getMonthAcronym = useCallback((date: Date) => {
     return date.toLocaleString('es-ES', { month: 'short' }).toUpperCase()
   }, [])
 
-  // Handler for clicking a date
+  // Manejador de clic en una fecha
   const handleDateClick = useCallback((date: number | null) => {
     setSelectedDate(date)
     setIsSubscriptionSelectorOpen(!!date)
   }, [])
 
-  // Handler for canceling a subscription
+  // Manejador para cancelar una suscripción
   const handleCancelSubscription = useCallback((subscription: Subscription) => {
     deleteSubscription(subscription)
   }, [deleteSubscription])
 
-  // Handler for confirming a payment
+  // Manejador para confirmar un pago
   const handleConfirmPayment = useCallback((subscription: Subscription) => {
     console.log('Confirmed payment for subscription:', subscription)
   }, [])
 
-  // Function to set the hovered subscription
+  // Función para establecer la suscripción seleccionada
   const setHoveredSubscription = useCallback((subscription: Subscription | null) => {
     console.log('Hovered subscription:', subscription)
   }, [])
 
-  // Animation variants for month transition
+  // Función para actualizar una suscripción
+  const updateSubscription = useCallback((updatedSubscription: Subscription) => {
+    setSubscriptions(prevSubscriptions => 
+      prevSubscriptions.map(sub => 
+        sub.name === updatedSubscription.name && sub.date === updatedSubscription.date ? updatedSubscription : sub
+      )
+    )
+  }, [])
+
+  // Variantes de animación para la transición de meses
   const variants = {
     enter: (direction: number) => {
       return {
@@ -224,13 +233,14 @@ export default function SubscriptionCalendar() {
                     }}
                   >
                     {isWheelView ? (
-                      <WheelView
-                        subscriptions={subscriptions}
-                        setHoveredSubscription={setHoveredSubscription}
-                        isDarkMode={isDarkMode}
-                        onSubscriptionClick={handleSubscriptionClick}
-                        monthlySpend={monthlySpend}
-                      />
+                     <WheelView
+                     subscriptions={subscriptions}
+                     setHoveredSubscription={setHoveredSubscription}
+                     isDarkMode={isDarkMode}
+                     onSubscriptionClick={handleSubscriptionClick}
+                     currentDate={currentDate}
+                     onPayMonth={onPayMonth}
+                   />
                     ) : (
                       <>
                         <div className="grid grid-cols-7 gap-2">
@@ -290,6 +300,8 @@ export default function SubscriptionCalendar() {
                         deleteSubscription={deleteSubscription}
                         isDarkMode={isDarkMode}
                         onSubscriptionClick={handleSubscriptionListClick}
+                        onUpdateSubscription={updateSubscription}
+                        currentDate={currentDate}
                       />
                     </motion.div>
                   </motion.div>
@@ -308,6 +320,7 @@ export default function SubscriptionCalendar() {
         )}
         <AnimatePresence>
           {selectedSubscriptions.length > 0 && (
+            
             <SubscriptionManager
               subscriptions={selectedSubscriptions}
               selectedDate={selectedDate || 1}
@@ -320,14 +333,14 @@ export default function SubscriptionCalendar() {
             />
           )}
         </AnimatePresence>
-        
         <AnimatePresence>
           {detailedSubscription && (
             <DetailedSubscriptionView
               subscription={detailedSubscription}
               onClose={() => setDetailedSubscription(null)}
               isDarkMode={isDarkMode}
-              position={detailedSubscriptionPosition}
+              onUpdateSubscription={updateSubscription}
+              currentDate={currentDate}
             />
           )}
         </AnimatePresence>
